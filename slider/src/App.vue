@@ -9,8 +9,10 @@
                     v-for="(post, key) in posts"
                     v-show="key <= 2"
                     :style="background(key)">
-                    <h3>{{ post.title }}</h3>
-                    <div class="content" v-html="post.content"></div>
+                    <div class="content">   
+                        <h3>{{ post.title }}</h3>
+                        <div class="content" v-html="post.content"></div>
+                    </div>
                 </div>
                 <button
                     class="flickity-prev-next-button previous"
