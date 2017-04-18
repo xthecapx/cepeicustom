@@ -29,7 +29,8 @@
                     <li 
                         v-for="(dot, key) in posts" 
                         @click="centerArray(key)"
-                        :key="key"></li>
+                        :key="key"
+                        :class="{'active': active == 'key-' + key ? true : false}"></li>
                 </ol>
             </div>
         </section>
@@ -44,16 +45,20 @@ export default {
     data() {
         return {
             posts: [],
-            ordered: []
+            ordered: [],
+            active: "key-0",
+            key: 0
         }
     },
     methods: {
         goBack() {
             let temp = this.posts.shift();
+
             this.posts.push(temp);
         },
         goNext() {
             let temp = this.posts.pop()
+
             this.posts.unshift(temp);
         },
         background(key) {
@@ -63,6 +68,7 @@ export default {
         },
         centerArray(key) {
             this.posts = this.ordered.slice()
+            this.active = 'key-' + key
 
             for (let i = 0; i < key; i++) {
                 this.goBack()
@@ -70,7 +76,7 @@ export default {
         }
     },
     created() {
-        this.$http.get('/api/wp-json/wp/v2/eventos_cepei?tags=331&_embed')
+        this.$http.get('/wp-json/wp/v2/eventos_cepei?tags=331&_embed')
             .then(response => {
                 for (let i = 0, l = response.data.length; i < l; i++) {
                     let data = {
