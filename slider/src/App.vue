@@ -24,6 +24,13 @@
                     type="button"
                     aria-label="next"
                     @click="goNext"><svg viewBox="0 0 100 100"><path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z" class="arrow" transform="translate(100, 100) rotate(180) "></path></svg></button>
+                
+                <ol class="dots">
+                    <li 
+                        v-for="(dot, key) in posts" 
+                        @click="centerArray(key)"
+                        :key="key"></li>
+                </ol>
             </div>
         </section>
         <div class="clearfix"></div>
@@ -36,7 +43,8 @@ export default {
     name: 'app',
     data() {
         return {
-            posts: []
+            posts: [],
+            ordered: []
         }
     },
     methods: {
@@ -52,6 +60,13 @@ export default {
             if (this.posts[key].bg) {
                 return {'background-image': "url('" + this.posts[key].bg +"')"}
             }
+        },
+        centerArray(key) {
+            this.posts = this.ordered.slice()
+
+            for (let i = 0; i < key; i++) {
+                this.goBack()
+            }
         }
     },
     created() {
@@ -64,6 +79,7 @@ export default {
                         content: response.data[i].excerpt.rendered
                     }
                     this.posts.push(data)
+                    this.ordered = this.posts.slice()
                 }
             }, response => {
                 // error callback
