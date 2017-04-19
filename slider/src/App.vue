@@ -3,7 +3,7 @@
     <article>
         <section class="entry-body">
             <h3 class="section-title">Destacados</h3>
-            <div class="rotation-slider" :class="{'show-custom': activateFade, 'hide-custom': !activateFade}">
+            <div class="rotation-slider" :class="{'hide-custom': !activateFade}">
                 <div
                     class="slide"
                     v-for="(post, key) in posts"
@@ -53,16 +53,18 @@ export default {
     },
     methods: {
         goBack() {
-            this.fadeEffect()
-            let temp = this.posts.shift()
+            let goBack = () => {
+                this.posts.push(this.posts.shift())
+            }
 
-            this.posts.push(temp);
+            this.fadeEffect(goBack)
         },
         goNext() {
-            this.fadeEffect()
-            let temp = this.posts.pop()
-
-            this.posts.unshift(temp);
+            let goNext = () => {
+                this.posts.unshift(this.posts.pop())
+            }
+            
+            this.fadeEffect(goNext)            
         },
         background(key) {
             if (this.posts[key].bg) {
@@ -70,26 +72,61 @@ export default {
             }
         },
         centerArray(key) {
-            this.fadeEffect()
-            this.posts = this.ordered.slice()
-            this.active = 'key-' + key
+            let centerArray = () => {
+                this.posts = this.ordered.slice()
+                this.active = 'key-' + key
 
-            for (let i = 0; i < key; i++) {
-                this.goBack()
+                for (let i = 0; i < key; i++) {
+                    this.goBack()
+                }
             }
+
+            this.fadeEffect(centerArray)
+
         },
-        fadeEffect() {
+        fadeEffect(callback) {
             this.activateFade = false
+            this.callback = callback
 
             let myFunction = function () {
                 this.activateFade = true
+                this.callback();
             }.bind(this)
 
             setTimeout(myFunction, 500);
+        },
+        getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        },
+        defineUrl() {
+            let a = document.createElement('a')
+            a.href = window.location.href
+
+            if (a.hostname == "localhost") {
+                return "/api/wp-json/wp/v2/eventos_cepei?tags=331&_embed"
+            }
+
+            if (!this.getParameterByName("post_type")) {
+                return "/wp-json/wp/v2/destacados_home?_embed"
+            }
+
+            if (this.getParameterByName("post_type") == "eventos_cepei") {
+                return "/wp-json/wp/v2/eventos_cepei?tags=331&_embed"
+            }
+
+            if (this.getParameterByName("post_type") == "bibliotecas") {
+                return "/wp-json/wp/v2/bibliotecas?tags=331&_embed"
+            }          
         }
     },
     created() {
-        this.$http.get('/api/wp-json/wp/v2/eventos_cepei?tags=331&_embed')
+        this.$http.get(this.defineUrl())
             .then(response => {
                 for (let i = 0, l = response.data.length; i < l; i++) {
                     let data = {
@@ -131,15 +168,12 @@ export default {
     }
 
     #home-slider .slide {
-        transition: opacity .3s;
+        transition: opacity .5s;
+        opacity: 1;
     }
 
     #home-slider .hide-custom .slide {
-        opacity: 0.4;
-    }
-
-    #home-slider .show-custom .slide {
-        opacity: 1;
+        opacity: 0.2;
     }
 </style>
 
