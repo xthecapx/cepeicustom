@@ -3,7 +3,7 @@
     <article>
         <section class="entry-body">
             <h3 class="section-title">Destacados</h3>
-            <div class="rotation-slider">
+            <div class="rotation-slider" :class="{'show-custom': activateFade, 'hide-custom': !activateFade}">
                 <div
                     class="slide"
                     v-for="(post, key) in posts"
@@ -47,16 +47,19 @@ export default {
             posts: [],
             ordered: [],
             active: "key-0",
-            key: 0
+            key: 0,
+            activateFade: true
         }
     },
     methods: {
         goBack() {
-            let temp = this.posts.shift();
+            this.fadeEffect()
+            let temp = this.posts.shift()
 
             this.posts.push(temp);
         },
         goNext() {
+            this.fadeEffect()
             let temp = this.posts.pop()
 
             this.posts.unshift(temp);
@@ -67,16 +70,26 @@ export default {
             }
         },
         centerArray(key) {
+            this.fadeEffect()
             this.posts = this.ordered.slice()
             this.active = 'key-' + key
 
             for (let i = 0; i < key; i++) {
                 this.goBack()
             }
+        },
+        fadeEffect() {
+            this.activateFade = false
+
+            let myFunction = function () {
+                this.activateFade = true
+            }.bind(this)
+
+            setTimeout(myFunction, 500);
         }
     },
     created() {
-        this.$http.get('/wp-json/wp/v2/eventos_cepei?tags=331&_embed')
+        this.$http.get('/api/wp-json/wp/v2/eventos_cepei?tags=331&_embed')
             .then(response => {
                 for (let i = 0, l = response.data.length; i < l; i++) {
                     let data = {
@@ -115,6 +128,18 @@ export default {
 
     #home-slider .rotation-slider .slide:nth-child(3) {
         background: green;
+    }
+
+    #home-slider .slide {
+        transition: opacity .3s;
+    }
+
+    #home-slider .hide-custom .slide {
+        opacity: 0.4;
+    }
+
+    #home-slider .show-custom .slide {
+        opacity: 1;
     }
 </style>
 
