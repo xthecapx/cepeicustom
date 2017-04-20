@@ -1,13 +1,24 @@
 <template>
   <div id="archive">
     <div class="filter">
-      <select name="pages" id="pages" v-model="filter.page">
-        <option v-for="p in pagination.totalpages" :value="p">{{ p }}</option>
-      </select>
     </div>
-    <ul>
-      <li v-for="post in posts">{{post.title}}</li>
+    <ul class="content-wrapper">
+      <li v-for="(post, key) in posts" class="post">
+        <div class="img-wrapper">
+          <img :src="post.bg " alt="">
+        </div>
+        <h3>{{post.title}}</h3>
+        <div class="content" v-html="post.content"></div>
+        <div class="clearfix" v-if="key%4 == 0"></div>
+      </li>
     </ul>
+    <paginate
+      :page-count="pagination.totalpages"
+      :click-handler="showMore"
+      :prev-text="'<'"
+      :next-text="'>'"
+      :container-class="'pagination'">
+    </paginate>
   </div>
 </template>
 
@@ -85,7 +96,33 @@ export default {
               // error callback
               console.log("e")
           });
-    }
+    },
+    showMore(pageNum) {
+      let url = ""
+
+      this.queryParams = "&page=" + pageNum + "&" + this.consult.default
+      url = this.url + this.queryParams
+
+      this.$http.get(url)
+          .then(response => {
+              this.posts = []
+
+              for (let i = 0, l = response.data.length; i < l; i++) {
+                  let data = {
+                      title: response.data[i].title.rendered,
+                      bg: response.data[i]._embedded["wp:featuredmedia"] && response.data[i]._embedded["wp:featuredmedia"][0].source_url,
+                      content: response.data[i].excerpt.rendered
+                  }
+
+                  this.posts.push(data)
+                  this.ordered = this.posts.slice()
+              }
+
+          }, response => {
+              // error callback
+              console.log("e")
+          });
+    },
   },
   created() {
       let url = ""
@@ -118,4 +155,40 @@ export default {
   }
 }
 </script>
+
+<style>
+#archive .content-wrapper {
+  display: block;
+  padding: 0;
+  margin: 0;
+}
+
+#archive .content-wrapper:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+#archive .content-wrapper .post {
+  float: left;
+  width: 25%;
+  list-style-type: none;
+  height: 300px;
+  overflow: hidden;
+  padding: 10px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+#archive .content-wrapper .post .img-wrapper {
+  width: 100%;
+  height: 150px;
+}
+
+#archive .content-wrapper .post img {
+  width: auto;
+  height: 100%
+}
+
+</style>
 

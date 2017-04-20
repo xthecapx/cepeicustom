@@ -3,9 +3,11 @@
 import Vue from 'vue'
 import Archive from './Archive'
 import VueResource from 'vue-resource'
+import Paginate from 'vuejs-paginate'
 
 Vue.config.productionTip = false
 Vue.use(VueResource)
+Vue.component('paginate', Paginate)
 
 /* eslint-disable no-new */
 new Vue({
