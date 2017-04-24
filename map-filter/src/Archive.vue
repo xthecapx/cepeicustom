@@ -11,6 +11,9 @@
       <select name="tema" id="tema" v-model="temaSelected" @change="updateTemas">
         <option v-for="tema in temas" :value="tema.value">{{ tema.name }}</option>
       </select>
+      <select name="fecha" id="fecha" v-model="fechaSelected" @change="updateFechas">
+        <option v-for="fecha in fechas" :value="fecha.value">{{ fecha.name }}</option>
+      </select>
       <div class="main-img">
         <img :src="imgSelected" alt="">
       </div>
@@ -20,7 +23,7 @@
         <div class="img-wrapper">
           <img :src="post.bg " alt="">
         </div>
-        <h3>{{post.title}}</h3>
+        <a :href="post.link"><h3>{{post.title}}</h3></a>
         <div class="content" v-html="post.content"></div>
       </li>
     </ul>
@@ -60,14 +63,15 @@ export default {
         totalPages: "X-WP-TotalPages"
       },
       tags: [
-        {name: "colombia", value: "218"}
+        { name: "CIUDAD", value: "" },
+        { name: "colombia", value: "&tags=218" }
       ],
       paisesIMG: {
         "218": "http://a3d.db3.myftpupload.com/wp-content/uploads/2017/04/mapa-eventos-bogota.png"
       },
       temas: [
         {
-          name: "Todos",
+          name: "TEMAS",
           value: "&type[]=eventos_cepei&type[]=gobernanzas&type[]=bibliotecas&type[]=datos"
         },
         {
@@ -85,6 +89,24 @@ export default {
         {
           name: "Datos",
           value: "&type[]=datos"
+        },
+        {
+          name: "Todos",
+          value: "&type[]=eventos_cepei&type[]=gobernanzas&type[]=bibliotecas&type[]=datos"
+        }
+      ],
+      fechas: [
+        {
+          name: "FECHAS",
+          value: ""
+        },
+        {
+          name: "Ascendente",
+          value: "&order=asc",
+        },
+        {
+          name: "Descendente",
+          value: "&order=desc",
         }
       ],
       categorias: [
@@ -96,8 +118,7 @@ export default {
       temaSelected: "",
       imgSelected: "",
       tagSelected: "",
-      filteredTag: "",
-      filteredTema: ""
+      fechaSelected: ""
     }
   },
   methods: {
@@ -133,17 +154,18 @@ export default {
                       this.categorias[0].value + 
                       "&page=" + pageNum +
                       this.consult.perPage +
-                      this.temas[0].value +
+                      this.fechaSelected +
+                      this.tagSelected + 
+                      this.temaSelected +
                       this.embed)
     },
     updateTags() {
-      this.filteredTag = "&tags=" + this.tagSelected
-
       this.updateData(this.url + 
                       this.categorias[0].value + 
                       this.consult.page +
                       this.consult.perPage +
-                      this.filteredTag + 
+                      this.fechaSelected +
+                      this.tagSelected + 
                       this.temaSelected +
                       this.embed)
       this.imgSelected = this.paisesIMG[this.tagSelected]
@@ -153,6 +175,18 @@ export default {
                       this.categorias[0].value + 
                       this.consult.page +
                       this.consult.perPage +
+                      this.fechaSelected +
+                      this.tagSelected + 
+                      this.temaSelected +
+                      this.embed)
+    },
+    updateFechas() {
+      this.updateData(this.url + 
+                      this.categorias[0].value + 
+                      this.consult.page +
+                      this.consult.perPage +
+                      this.fechaSelected +
+                      this.tagSelected +
                       this.temaSelected +
                       this.embed)
     },
@@ -165,7 +199,8 @@ export default {
                   let data = {
                       title: response.data[i].title.rendered,
                       bg: response.data[i]._embedded["wp:featuredmedia"] && response.data[i]._embedded["wp:featuredmedia"][0].source_url,
-                      content: response.data[i].excerpt.rendered
+                      content: response.data[i].excerpt.rendered,
+                      link: response.data[i].link
                   }
 
                   this.posts.push(data)
@@ -183,6 +218,9 @@ export default {
       this.defineUrl()
       this.imgSelected = this.paisesIMG["218"]
       this.temaSelected = this.temas[0].value
+      this.tagSelected = this.tags[0].value
+      this.fechaSelected = this.fechas[0].value
+
       this.updateData(this.url + 
                       this.categorias[0].value + 
                       this.consult.page +
@@ -225,6 +263,19 @@ export default {
 #archive .content-wrapper .post img {
   width: auto;
   height: 100%
+}
+
+#archive .filter {
+  background: #f2f2f2;
+  border: 2px solid #BFBFBF;
+}
+
+#archive .filter img {
+  width: 100%;
+}
+
+#archive .filter .label {
+  display: inline-block;
 }
 
 </style>
