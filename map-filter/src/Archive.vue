@@ -1,10 +1,11 @@
 <template>
   <div id="archive">
-    <h3 class="section-title">ARCHIVO</h3>
+    <h3 class="section-title">{{ title }}</h3>
     <div class="filter">
       <div class="label">
         FILTRAR POR:
       </div>
+      <input type="text" v-model="search" v-if="inCategory">
       <select name="pais" id="pais" v-model="tagSelected" @change="updateTags">
         <option v-for="tag in tags" :value="tag.value">{{ tag.name }}</option>
       </select>
@@ -14,7 +15,8 @@
       <select name="fecha" id="fecha" v-model="fechaSelected" @change="updateFechas">
         <option v-for="fecha in fechas" :value="fecha.value">{{ fecha.name }}</option>
       </select>
-      <div class="main-img">
+      <button @click="searchTerm" v-if="inCategory">BUSCAR</button>
+      <div v-if="!inCategory" class="main-img">
         <img :src="imgSelected" alt="">
       </div>
     </div>
@@ -113,12 +115,24 @@ export default {
         {
           name: "Eventos",
           value: "?categories=325"
+        },
+        {
+          name: "Gobernanza",
+          value: "?categories=322"
+        },
+        {
+          name: "Multimedia",
+          value: "?categories=326"
         }
       ],
       temaSelected: "",
       imgSelected: "",
       tagSelected: "",
-      fechaSelected: ""
+      fechaSelected: "",
+      categorySelected: "",
+      search: "",
+      inCategory: false,
+      title: "ARCHIVO"
     }
   },
   methods: {
@@ -141,54 +155,89 @@ export default {
           total: "x-wp-total",
           totalPages: "x-wp-totalpages"
         }
+        this.categorySelected = this.categorias[0].value
+        this.inCategory = true
         return
       }
 
       if (this.getParameterByName("post_type") == "eventos_cepei") {
         this.url = "/wp-json/wp/v2/multiple-post-type"
+        this.categorySelected = this.categorias[0].value
+      }
+
+      if (window.location.pathname == "/category/gobernanza-del-desarrollo/") {
+        this.url = "/wp-json/wp/v2/multiple-post-type"
+        this.categorySelected = this.categorias[1].value
+        this.inCategory = true
+        this.title = "ARCHIVO DE GOBERNANZA"
+      }
+
+      if (window.location.pathname == "/category/publicaciones-y-multimedia/") {
+        this.url = "/wp-json/wp/v2/multiple-post-type"
+        this.categorySelected = this.categorias[2].value
+        this.inCategory = true
+        this.title = "ARCHIVO DE MULTIMEDIA"
       }
         
     },
     showMore(pageNum) {
       this.updateData(this.url + 
-                      this.categorias[0].value + 
+                      this.categorySelected + 
                       "&page=" + pageNum +
                       this.consult.perPage +
                       this.fechaSelected +
                       this.tagSelected + 
                       this.temaSelected +
+                      this.checkSearch() +
                       this.embed)
     },
     updateTags() {
       this.updateData(this.url + 
-                      this.categorias[0].value + 
+                      this.categorySelected + 
                       this.consult.page +
                       this.consult.perPage +
                       this.fechaSelected +
                       this.tagSelected + 
                       this.temaSelected +
+                      this.checkSearch() +
                       this.embed)
       this.imgSelected = this.paisesIMG[this.tagSelected]
     },
     updateTemas() {
       this.updateData(this.url + 
-                      this.categorias[0].value + 
+                      this.categorySelected + 
                       this.consult.page +
                       this.consult.perPage +
                       this.fechaSelected +
                       this.tagSelected + 
                       this.temaSelected +
+                      this.checkSearch() +
                       this.embed)
     },
     updateFechas() {
       this.updateData(this.url + 
-                      this.categorias[0].value + 
+                      this.categorySelected + 
                       this.consult.page +
                       this.consult.perPage +
                       this.fechaSelected +
                       this.tagSelected +
                       this.temaSelected +
+                      this.checkSearch() +
                       this.embed)
+    },
+    searchTerm() {
+      this.updateData(this.url + 
+                      this.categorySelected + 
+                      this.consult.page +
+                      this.consult.perPage +
+                      this.fechaSelected +
+                      this.tagSelected + 
+                      this.temaSelected +
+                      this.checkSearch() +
+                      this.embed)
+    },
+    checkSearch() {
+      return this.search ? "&search=" + this.search : ""
     },
     updateData(url) {
       this.$http.get(url)
@@ -222,7 +271,7 @@ export default {
       this.fechaSelected = this.fechas[0].value
 
       this.updateData(this.url + 
-                      this.categorias[0].value + 
+                      this.categorySelected + 
                       this.consult.page +
                       this.consult.perPage +
                       this.temaSelected +
