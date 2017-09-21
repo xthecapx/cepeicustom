@@ -9,8 +9,9 @@
                     v-for="(post, key) in posts"
                     v-show="key <= 2"
                     :style="background(key)">
-                    <div class="content">   
-                        <h3>{{ post.title }}</h3>
+                    <div class="content">
+                        <h3><a :href="post.link">{{ post.title }}</a></h3>
+                        <div class="date">{{ post.date }}</div>
                         <div class="content" v-html="post.content"></div>
                     </div>
                 </div>
@@ -18,16 +19,16 @@
                     class="flickity-prev-next-button previous"
                     type="button"
                     aria-label="previous"
-                    @click="goBack"><svg viewBox="0 0 100 100"><path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z" class="arrow"></path></svg></button>
+                    @click="goBack(true)"><svg viewBox="0 0 100 100"><path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z" class="arrow"></path></svg></button>
                 <button
                     class="flickity-prev-next-button next"
                     type="button"
                     aria-label="next"
-                    @click="goNext"><svg viewBox="0 0 100 100"><path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z" class="arrow" transform="translate(100, 100) rotate(180) "></path></svg></button>
-                
+                    @click="goNext(true)"><svg viewBox="0 0 100 100"><path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z" class="arrow" transform="translate(100, 100) rotate(180) "></path></svg></button>
+
                 <ol class="dots">
-                    <li 
-                        v-for="(dot, key) in posts" 
+                    <li
+                        v-for="(dot, key) in posts"
                         @click="centerArray(key)"
                         :key="key"
                         :class="{'active': active == 'key-' + key ? true : false}"></li>
@@ -52,19 +53,42 @@ export default {
         }
     },
     methods: {
-        goBack() {
+        goBack(check) {
             let goBack = () => {
                 this.posts.push(this.posts.shift())
             }
 
+            if (check) {
+              let index = parseInt(this.active.split("-")[1])
+
+              if (index > 0) {
+                index--
+                this.active = 'key-' + index
+              } else {
+                let x = this.posts.length - 1
+                this.active = 'key-' + x
+              }
+            }
+
             this.fadeEffect(goBack)
         },
-        goNext() {
+        goNext(check) {
             let goNext = () => {
                 this.posts.unshift(this.posts.pop())
             }
-            
-            this.fadeEffect(goNext)            
+
+            if (check) {
+              let index = parseInt(this.active.split("-")[1])
+
+              if (index < this.posts.length - 1) {
+                index++
+                this.active = 'key-' + index
+              } else {
+                this.active = 'key-0'
+              }
+            }
+
+            this.fadeEffect(goNext)
         },
         background(key) {
             if (this.posts[key].bg) {
@@ -77,7 +101,7 @@ export default {
                 this.active = 'key-' + key
 
                 for (let i = 0; i < key; i++) {
-                    this.goBack()
+                    this.goBack(false)
                 }
             }
 
@@ -122,18 +146,30 @@ export default {
 
             if (this.getParameterByName("post_type") == "bibliotecas") {
                 return "/wp-json/wp/v2/bibliotecas?tags=331&_embed"
-            }          
+            }
         }
     },
     created() {
         this.$http.get(this.defineUrl())
             .then(response => {
                 for (let i = 0, l = response.data.length; i < l; i++) {
+                    let bg = response.data[i] &&
+                        response.data[i]._embedded["wp:featuredmedia"] &&
+                        response.data[i]._embedded["wp:featuredmedia"][0].source_url &&
+                        response.data[i]._embedded["wp:featuredmedia"][0].source_url;
+
+                    let content = response.data[i] &&
+                        response.data[i].excerpt &&
+                        response.data[i].excerpt.rendered;
+
                     let data = {
                         title: response.data[i].title.rendered,
-                        bg: response.data[i]._embedded["wp:featuredmedia"] && response.data[i]._embedded["wp:featuredmedia"][0].source_url,
-                        content: response.data[i].excerpt.rendered
+                        bg: bg,
+                        link: response.data[i].link,
+                        date: moment(response.data[i].date).format("MMMM DD, YYYY"),
+                        content: content
                     }
+
                     this.posts.push(data)
                     this.ordered = this.posts.slice()
                 }
